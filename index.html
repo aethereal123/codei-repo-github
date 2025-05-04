@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>codei81224</title>
+  <link rel="icon" type="image/png" href="https://i.ibb.co.com/Mkkm0zhX/Codei-removebg-preview.png"">
+  <style>
+
+  /* Area game */
+  #game-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: linear-gradient(to bottom, #000000, #2c2c2c); /* Latar belakang gelap */
+    overflow: hidden;
+    border: 2px solid red;
+    margin: 20px auto;
+    box-shadow: 0 0 20px red; /* Efek menyeramkan */
+  }
+
+  /* Pemain (burung gagak) */
+  #player {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background: url('https://tse3.mm.bing.net/th?id=OIP.d890Q_ho4F-NijJSgwbudwHaF8&pid=Api&P=0&h=220') no-repeat center center / contain; /* Gambar burung gagak */
+    top: 50%;
+    left: 50px;
+    transform: translateY(-50%);
+    z-index: 10; /* Pastikan burung gagak berada di atas elemen lainnya */
+  }
+
+  /* Garis finish */
+  #finish-line {
+    position: absolute;
+    width: 20px;
+    height: 100%;
+    background: crimson;
+    right: 0;
+    top: 0;
+    box-shadow: 0 0 10px red; /* Efek menyeramkan */
+  }
+
+  /* Pesan game over */
+  #game-over-message {
+    display: none;
+    text-align: center;
+    font-size: 2rem;
+    font-family: 'Courier New', Courier, monospace;
+    color: white;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    text-shadow: 2px 2px 5px red; /* Efek menyeramkan */
+  }
+
+  /* Rintangan */
+  .obstacle {
+    position: absolute;
+    width: 50px;
+    height: 100px;
+    background: url('https://i.ibb.co/7bFq5zL/crow.png') no-repeat center center / contain; /* Gambar rintangan */
+    top: 0;
+    animation: moveObstacle 5s linear infinite;
+    filter: brightness(0.5); /* Efek gelap */
+  }
+
+  /* Animasi rintangan */
+  @keyframes moveObstacle {
+    from {
+      right: -50px;
+    }
+    to {
+      right: 100%;
+    }
+  }
+
+    /* Gaya untuk navigation bar */
+  .navbar {
+    background: linear-gradient(135deg, #333, #555); /* Gradien abu-abu gelap */
+    border: 3px solid #444; /* Border abu-abu gelap */
+    padding: 15px 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Bayangan */
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-radius: 10px; /* Sudut melengkung */
+  }
+
+  /* Gaya untuk daftar tautan */
+  .navbar-list {
+    list-style: none;
+    display: flex;
+    gap: 25px;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Gaya untuk tautan */
+  .navbar-link {
+    text-decoration: none;
+    font-family: 'Courier New', Courier, monospace; /* Font yang sama dengan random-number-display */
+    font-size: 1.2rem;
+    color: #fff; /* Warna teks putih */
+    background: #333; /* Warna latar abu-abu gelap */
+    padding: 12px 25px;
+    border: 2px solid #555; /* Border abu-abu */
+    border-radius: 8px; /* Sudut melengkung */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Bayangan pada teks */
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease; /* Animasi saat hover */
+  }
+
+  /* Efek hover untuk tautan */
+  .navbar-link:hover {
+    transform: translateY(-3px); /* Efek melayang */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5); /* Tambahkan bayangan saat hover */
+    background: linear-gradient(135deg, #444, #666); /* Gradien lebih terang saat hover */
+    border-color: #666; /* Border lebih terang */
+  }
+
+  /* Tambahkan jarak antara navbar dan logo */
+  .logo-box {
+    margin-top: 20px; /* Jarak antara navbar dan logo */
+  }
+
+    .logo {
+      max-width: 100px;
+      margin-bottom: 20px;
+      filter: grayscale(100%) brightness(1.2);
+      transition: 0.3s ease;
+    }
+
+    .logo:hover {
+      filter: grayscale(0%) brightness(1.5);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    #random-number-display {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 5rem;
+      font-family: 'Courier New', Courier, monospace; /* Font misterius */
+      color: #ff0000; /* Warna merah */
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+      z-index: 1000;
+    }
+
+    #random-number-display.show {
+      opacity: 1;
+    }
+
+    body {
+      background-color: #f9f9f9;
+      color: #111;
+      font-family: 'Courier New', Courier, monospace;
+      padding: 30px;
+      transition: 0.2s;
+    }
+
+    body.glitch-flash {
+      animation: glitchFlash 0.1s steps(2, start) 5;
+    }
+
+    @keyframes glitchFlash {
+      0% { background-color: #f9f9f9; color: #111; }
+      50% { background-color: #9f00ff; color: #00ff00; }
+      100% { background-color: #f9f9f9; color: #111; }
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .logo-box {
+      display: inline-block;
+      background: #ffffff;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      padding: 10px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .logo-box img {
+      max-width: 100px;
+      display: block;
+      margin: auto;
+    }
+
+    header h1 {
+      font-size: 2.5em;
+      color: #000;
+      letter-spacing: 3px;
+    }
+
+    header p {
+      font-size: 1.1em;
+      color: #666;
+      margin-top: 10px;
+    }
+
+  /* Gaya untuk lingkaran */
+  #circle {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background-color: black; /* Warna latar hitam */
+    border-radius: 50%; /* Membuat elemen berbentuk lingkaran */
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border: 5px solid transparent; /* Border transparan untuk animasi */
+    animation: rainbow-border 3s linear infinite, spin 5s linear infinite; /* Animasi border pelangi dan rotasi */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Teks di dalam lingkaran */
+  #circle span {
+    font-family: 'Courier New', Courier, monospace; /* Font yang sama dengan random-number-display */
+    font-size: 2rem; /* Ukuran font */
+    color: red; /* Warna teks merah */
+    font-weight: 300; /* Font tipis */
+  }
+
+  /* Animasi border pelangi */
+  @keyframes rainbow-border {
+    0% { border-color: red; }
+    16% { border-color: orange; }
+    33% { border-color: yellow; }
+    50% { border-color: green; }
+    66% { border-color: blue; }
+    83% { border-color: indigo; }
+    100% { border-color: violet; }
+  }
+
+  /* Animasi rotasi lingkaran */
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    section {
+      background-color: #ffffff;
+      border: 1px solid #ccc;
+      padding: 25px;
+      margin-bottom: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    section:hover {
+      background-color: #f1f1f1;
+    }
+
+    section h2 {
+      color: #222;
+      margin-bottom: 15px;
+    }
+
+    section p {
+      line-height: 1.6;
+      color: #444;
+    }
+
+    .glitch-btns {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .glitch-btns button {
+      background-color: #111;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      margin: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 1px;
+      transition: 0.2s;
+    }
+
+    .glitch-btns button:hover {
+      background-color: #333;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.9em;
+      color: #888;
+      margin-top: 60px;
+    }
+
+    .music-box {
+      text-align: center;
+      margin-top: 40px;
+      color: #999;
+    }
+
+    .worm-gif {
+      position: fixed;
+      width: 400px;
+      height: auto;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+      /* Sandi Siput Box Design */
+      .sandi-siput-container {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+      font-family: 'Courier New', Courier, monospace;
+      text-align: center;
+    }
+
+    .sandi-siput-box {
+      background-color: #333;
+      color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 1.2em;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s ease-in-out;
+    }
+
+    .sandi-siput-box:hover {
+      transform: rotate(360deg);
+      background-color: #f9f9f9;
+      color: #111;
+    }
+
+    .sandi-siput-box span {
+      display: block;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+      <ul class="navbar-list">
+        <li><a href="#home" class="navbar-link">Home</a></li>
+        <li><a href="#game-section" class="navbar-link">Game</a></li>
+        <li><a href="http://instagram.com/ev.nazwa" class="navbar-link" target="_blank">Kontak</a></li>
+      </ul>
+    </nav>
+
+   <header>
+    <div class="logo-box">
+      <a href="https://static.wikia.nocookie.net/joey-slikk-alt/images/b/b2/Too_Demonic_To_Be_Uncanny.png/revision/latest?cb=20220923081639">
+        <img id="logo" src="https://i.ibb.co.com/Mkkm0zhX/Codei-removebg-preview.png" alt="HLX" class="logo" border="0">
+      </a>
+    </div>
+    <h1>codei81224</h1>
+    <p>Rangga, RZYD, Natasya, Nazwa</p>
+    </header>
+
+     <!-- Game Section -->
+     <section id="game-section" style="display: none;">
+      <h2 style="color: red; text-shadow: 2px 2px 5px black;">Crowbird Destination</h2>
+      <div id="game-container">
+        <div id="player"></div> <!-- Burung gagak -->
+        <div id="finish-line"></div> <!-- Garis finish -->
+      </div>
+      <div id="game-over-message"></div>
+    </section>
+
+    <main>
+        <section onclick="glitchFlash()">
+          <h2>Siapa Kami</h2>
+          <p>Kami adalah tim cyber anonim yang bergerak di balik layar dunia digital. Tanpa nama, tanpa wajah, tapi dengan misi yang jelas: menjaga keadilan dan membongkar rahasia dunia maya. Kami bukan hacker, kami bukan penjahat, tapi kami adalah pemuda yang peduli pada keamanan informasi dan kebenaran.
+
+            Kami hadir untuk melindungi yang lemah, mengungkap kecurangan, dan membagikan pengetahuan kepada mereka yang peduli. Kami tidak terikat dengan aturan umum, tapi kami memiliki prinsip yang jelas: Melindungi yang benar, mengungkap yang salah.</p>
+        </section>
+    
+        <section onclick="glitchFlash()">
+          <h2>Misi Kami</h2>
+          <p>Kami bukan hanya sebuah tim, kami adalah gerakan. Misi kami jelas: melindungi, mengungkap, dan menyebarkan kebenaran. Di dunia digital yang penuh dengan informasi yang terdistorsi, kami hadir untuk memastikan yang benar tetap terlihat dan yang salah terbongkar. Kami berbicara melalui kode, kami bergerak melalui sistem, dan kami berjuang untuk menciptakan dunia maya yang lebih aman dan adil.
+
+            Kami bukan untuk mencari perhatian, kami bergerak diam-diam untuk membawa perubahan. Jika kamu peduli dengan keadilan di dunia digital, kamu sudah ada di jalur yang benar.
+            
+            </p>
+        </section>
+    
+        <section onclick="glitchFlash()">
+          <h2>Kontak Rahasia</h2>
+          <p>Kami tidak ada di media sosial. Kami tidak ingin dilihat, kami hanya ingin bergerak di balik layar. Jika kamu merasa ada yang salah di dunia digital dan ingin bergabung, atau jika kamu memiliki informasi penting yang perlu kami ketahui, kami ada di sini. Hubungi kami melalui saluran yang aman, dan kami akan mendengar.
+
+            Jangan khawatir, informasi kamu akan tetap aman bersama kami. Kami bukan untuk dilihat, kami ada untuk melawan ketidakadilan.</p>
+        </section>
+    
+        
+
+         <!-- Sandi Siput Box -->
+         <div class="sandi-siput-container">
+          <div class="sandi-siput-box">4<span>#</span></div>
+          <div class="sandi-siput-box">13<span>@</span></div>
+          <div class="sandi-siput-box">26<span>*</span></div>
+          <div class="sandi-siput-box">19<span>%</span></div>
+          <div class="sandi-siput-box">19<span>&</span></div>
+          <div class="sandi-siput-box">13<span>!</span></div>
+
+          <div class="sandi-siput-box">18<span>$</span></div>
+          <div class="sandi-siput-box">17<span>^</span></div>
+          <div class="sandi-siput-box">14<span>#</span></div>
+          <div class="sandi-siput-box">4<span>*</span></div>
+          <div class="sandi-siput-box">21<span>@</span></div>
+          <div class="sandi-siput-box">13<span>%</span></div>
+
+          <div class="sandi-siput-box">26<span>&</span></div>
+          <div class="sandi-siput-box">3<span>!</span></div>
+          <div class="sandi-siput-box">1<span>$</span></div>
+          <div class="sandi-siput-box">5<span>^</span></div>
+          <div class="sandi-siput-box">19<span>#</span></div>
+          <div class="sandi-siput-box">1<span>*</span></div>
+
+          <div class="sandi-siput-box">18<span>@</span></div>
+          <div class="sandi-siput-box">3<span>&</span></div>
+          <div class="sandi-siput-box">9<span>^</span></div>
+          <div class="sandi-siput-box">16<span>*</span></div>
+          <div class="sandi-siput-box">8<span>!</span></div>
+          <div class="sandi-siput-box">5<span>$</span></div>
+        </div>
+          
+        <div id="circle">
+          <span>666</span>
+        </div>
+  
+      <footer>
+        &copy; 2025 codei81224 — Stay hidden.
+      </footer>
+    
+    
+    
+      <audio id="glitch-sound" src="https://drive.google.com/uc?export=download&id=1759zJlT2oAUsvd8FwijgcTLuWt0bcg5l" preload="auto"></audio>
+    
+      <!-- Tambahkan elemen untuk menampilkan nomor acak -->
+<div id="random-number-display"></div>
+
+
+<script>
+  const player = document.getElementById('player');
+  const gameContainer = document.getElementById('game-container');
+  const finishLine = document.getElementById('finish-line');
+  const gameOverMessage = document.getElementById('game-over-message');
+  const gameSection = document.getElementById('game-section');
+  let isGameOver = false;
+  let playerTop = gameContainer.offsetHeight / 2; // Posisi awal pemain
+  let timer; // Timer untuk durasi game
+
+  // Fungsi untuk membuat rintangan
+  function createObstacle() {
+    const obstacle = document.createElement('div');
+    obstacle.classList.add('obstacle');
+    obstacle.style.height = `${Math.random() * 150 + 50}px`; // Tinggi acak
+    obstacle.style.top = `${Math.random() * (gameContainer.offsetHeight - 100)}px`; // Posisi acak
+    gameContainer.appendChild(obstacle);
+
+    // Hapus rintangan setelah selesai animasi
+    obstacle.addEventListener('animationend', () => {
+      obstacle.remove();
+    });
+  }
+
+  // Fungsi untuk memulai game
+  function startGame() {
+    isGameOver = false;
+    gameOverMessage.style.display = 'none';
+
+    // Buat rintangan setiap 2 detik
+    const obstacleInterval = setInterval(() => {
+      if (isGameOver) {
+        clearInterval(obstacleInterval);
+      } else {
+        createObstacle();
+      }
+    }, 2000);
+
+    // Timer untuk durasi game
+    timer = setTimeout(() => {
+      if (!isGameOver) {
+        isGameOver = true;
+        gameOverMessage.style.display = 'block';
+        gameOverMessage.textContent = 'Selamat! Anda Menang!';
+      }
+    }, 60000); // 1 menit
+  }
+
+  // Fungsi untuk menggerakkan pemain
+  function movePlayer(event) {
+    if (isGameOver) return;
+
+    if (event.key === 'ArrowUp') {
+      playerTop -= 20; // Naik
+    } else if (event.key === 'ArrowDown') {
+      playerTop += 20; // Turun
+    }
+
+    // Pastikan pemain tetap di dalam area game
+    if (playerTop < 0) playerTop = 0;
+    if (playerTop > gameContainer.offsetHeight - player.offsetHeight) {
+      playerTop = gameContainer.offsetHeight - player.offsetHeight;
+    }
+
+    player.style.top = `${playerTop}px`;
+  }
+
+  // Fungsi untuk mendeteksi tabrakan
+  function checkCollision() {
+    const obstacles = document.querySelectorAll('.obstacle');
+    obstacles.forEach((obstacle) => {
+      const obstacleRect = obstacle.getBoundingClientRect();
+      const playerRect = player.getBoundingClientRect();
+
+      if (
+        playerRect.left < obstacleRect.right &&
+        playerRect.right > obstacleRect.left &&
+        playerRect.top < obstacleRect.bottom &&
+        playerRect.bottom > obstacleRect.top
+      ) {
+        isGameOver = true;
+        gameOverMessage.style.display = 'block';
+        gameOverMessage.textContent = 'Game Over! Anda Kalah!';
+        clearTimeout(timer); // Hentikan timer
+      }
+    });
+
+    if (!isGameOver) {
+      requestAnimationFrame(checkCollision);
+    }
+  }
+
+  // Event listener untuk kontrol pemain
+  document.addEventListener('keydown', movePlayer);
+
+  // Tampilkan game saat tombol "Game" di navbar diklik
+  document.querySelector('.navbar-link[href="#game-section"]').addEventListener('click', (e) => {
+    e.preventDefault(); // Mencegah scroll otomatis
+    gameSection.style.display = 'block'; // Tampilkan game
+    startGame(); // Mulai game
+    checkCollision(); // Mulai deteksi tabrakan
+  });
+</script>
+
+<script>
+  // Fungsi untuk menampilkan gambar penuh layar
+  function showFullScreenImage() {
+    // Buat elemen gambar
+    const fullScreenImage = document.createElement('div');
+    fullScreenImage.style.position = 'fixed';
+    fullScreenImage.style.top = '0';
+    fullScreenImage.style.left = '0';
+    fullScreenImage.style.width = '100vw';
+    fullScreenImage.style.height = '100vh';
+    fullScreenImage.style.backgroundImage = "url('https://www.gorecenter.com/wp-content/uploads/2024/02/Guy-with-skinned-face.jpg')"; // Ganti URL gambar di sini
+    fullScreenImage.style.backgroundSize = 'cover';
+    fullScreenImage.style.backgroundPosition = 'center';
+    fullScreenImage.style.zIndex = '9999';
+    fullScreenImage.style.transition = 'opacity 0.5s ease-in-out';
+    fullScreenImage.style.opacity = '1';
+
+    // Tambahkan elemen gambar ke body
+    document.body.appendChild(fullScreenImage);
+
+    // Setelah 5 detik, hapus gambar dan refresh halaman
+    setTimeout(() => {
+      fullScreenImage.style.opacity = '0'; // Tambahkan efek fade-out
+      setTimeout(() => {
+        fullScreenImage.remove();
+        location.reload(); // Refresh halaman
+      }, 500); // Tunggu hingga fade-out selesai
+    }, 5000); // Tampilkan gambar selama 5 detik
+  }
+
+  // Timer untuk menampilkan gambar setelah 20 detik game berjalan
+  setTimeout(() => {
+    showFullScreenImage();
+  }, 20000); // 20 detik
+</script>
+
+<script>
+  let circleClickCount = 0; // Variabel untuk menghitung jumlah klik pada lingkaran
+
+  // Fungsi untuk memindahkan lingkaran ke posisi acak
+  function moveCircle() {
+    const circle = document.getElementById('circle');
+    const maxWidth = window.innerWidth - 100; // Lebar layar dikurangi ukuran lingkaran
+    const maxHeight = window.innerHeight - 100; // Tinggi layar dikurangi ukuran lingkaran
+
+    const randomX = Math.random() * maxWidth;
+    const randomY = Math.random() * maxHeight;
+
+    circle.style.left = `${randomX}px`;
+    circle.style.top = `${randomY}px`;
+  }
+
+  // Tambahkan event listener untuk lingkaran
+  const circle = document.getElementById('circle');
+  circle.addEventListener('click', () => {
+    circleClickCount++; // Tambahkan jumlah klik
+    moveCircle(); // Pindahkan lingkaran ke posisi acak
+
+    // Jika pengguna telah menekan lingkaran sebanyak 24 kali
+    if (circleClickCount === 24) {
+      window.location.href = 'https://ibb.co.com/6JRFGhkc'; // Arahkan ke situs yang ditentukan
+    }
+  });
+
+  // Posisikan lingkaran secara acak saat halaman dimuat
+  window.addEventListener('load', moveCircle);
+</script>
+
+<script>
+  // Fungsi untuk mengganti logo sementara
+  function toggleLogo() {
+    const logo = document.getElementById('logo');
+    const originalSrc = 'https://i.ibb.co.com/Mkkm0zhX/Codei-removebg-preview.png'; // URL logo asli
+    const skullSrc = 'https://m.gjcdn.net/fireside-post-image/900/20699384-fswrde2i-v4.jpg'; // URL logo tengkorak
+
+    // Ganti logo menjadi tengkorak
+    logo.src = skullSrc;
+
+    // Kembalikan logo asli setelah 0.1 detik
+    setTimeout(() => {
+      logo.src = originalSrc;
+    }, 100);
+  }
+
+  // Jalankan fungsi toggleLogo setiap 3 detik
+  setInterval(toggleLogo, 3000);
+</script>
+
+
+
+<script>
+  // Fungsi untuk menghasilkan nomor acak antara min dan max
+  function getRandomNumber(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  // Tambahkan event listener ke semua elemen dengan class "sandi-siput-box"
+  const sandiSiputBoxes = document.querySelectorAll('.sandi-siput-box');
+  sandiSiputBoxes.forEach(box => {
+    box.addEventListener('click', () => {
+      const randomNumber = getRandomNumber(8, 24);
+      const display = document.getElementById('random-number-display');
+      display.textContent = randomNumber;
+      display.classList.add('show');
+
+      // Hapus nomor setelah 0.5 detik
+      setTimeout(() => {
+        display.classList.remove('show');
+        display.textContent = '';
+      }, 500);
+    });
+  });
+</script>
+
+<style>
+  /* CSS untuk menampilkan nomor acak di tengah layar */
+  #random-number-display {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 5rem;
+    font-family: 'Courier New', Courier, monospace; /* Font misterius */
+    color: #ff0000; /* Warna merah */
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    z-index: 1000;
+  }
+
+  #random-number-display.show {
+    opacity: 1;
+  }
+</style>
+
+
+      <script>
+        let clickCount = 0;
+        let hasGlitched = false; // Flag untuk memastikan glitch hanya terjadi sekali
+        function glitchFlash() {
+          if (hasGlitched) return; // Cek apakah efek glitch sudah terjadi
+          document.body.classList.add('glitch-flash');
+          const sound = document.getElementById("glitch-sound");
+          if (sound) {
+            sound.currentTime = 0;
+            sound.play();
+          }
+          setTimeout(() => {
+            document.body.classList.remove('glitch-flash');
+          }, 200);
+      
+          clickCount++;
+          if (clickCount === 12 && !hasGlitched) {
+            hasGlitched = true;  // Tandai efek sudah terjadi
+            spawnGlitchWorms();
+          }
+        }
+      
+        function spawnGlitchWorms() {
+          let startTime = Date.now();
+          document.body.style.pointerEvents = 'none';
+      
+          const interval = setInterval(() => {
+            const worm = document.createElement('img');
+            worm.src = 'https://media.giphy.com/media/Xkkgma2CG6TRu/giphy.gif';
+            worm.className = 'worm-gif';
+            worm.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+            worm.style.top = Math.random() * (window.innerHeight - 200) + 'px';
+            document.body.appendChild(worm);
+      
+            document.body.style.backgroundColor = (Math.random() > 0.1) ? '#00ff00' : '#9f00ff';
+      
+            if (Date.now() - startTime >= 25000) {
+              clearInterval(interval);
+              document.body.style.backgroundColor = '#f9f9f9';
+              document.body.style.pointerEvents = 'auto';
+              clickCount = 0;
+      
+              document.querySelectorAll('.worm-gif').forEach(el => el.remove());
+            }
+          }, 500);
+      
+          const epileptic = setInterval(() => {
+            document.body.style.backgroundColor = (Math.random() > 0.1) ? '#00ff00' : '#9f00ff';
+            if (Date.now() - startTime >= 25000) clearInterval(epileptic);
+          }, 1);
+        }
+      </script>
+</body>
+</html>
